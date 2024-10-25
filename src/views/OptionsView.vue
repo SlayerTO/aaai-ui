@@ -52,7 +52,7 @@ const options = [
     }
 ]
 
-const PictureTypes = ["WEBP", "PNG", "JPG"];
+const PictureTypes = ["WEBP", "PNG", "JPG", "JPEG"];
 
 const fileList = ref([]);
 const upload = ref();
