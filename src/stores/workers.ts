@@ -3,14 +3,15 @@ import { defineStore } from "pinia";
 import { useLocalStorage } from '@vueuse/core'
 import { computed, ref } from "vue";
 import { useGeneratorStore, type IModelData } from "./generator";
-import { POLL_WORKERS_INTERVAL, DEBUG_MODE } from "@/constants";
+import { BASE_URL_AI_STABLE, BASE_URL_EU_STABLE, POLL_WORKERS_INTERVAL, DEBUG_MODE } from "@/constants";
 import { validateResponse } from "@/utils/validate";
-import { BASE_URL_STABLE } from "@/constants";
 import { useLanguageStore } from '@/stores/i18n';
+import { useOptionsStore } from '@/stores/options';
 type SortOptions = "Default" | "Name" | "Info" | "Uptime" | "MPS" | "Speed" | "Requests" | "Model Count" | "Worker Count" | "Queued" | "Clear Time"
 
 export const useWorkerStore = defineStore("workers", () => {
     const lang = useLanguageStore();
+    const settings = useOptionsStore();
     const workers = ref<WorkerDetailsStable[]>([]);
     const teams = ref<TeamDetailsStable[]>([]);
     const sortBy = useLocalStorage<SortOptions>("sortBy", "Default");
@@ -32,7 +33,14 @@ export const useWorkerStore = defineStore("workers", () => {
       }));
     const sortedWorkers = computed(() => filterBySearch(sortWorkersBy(sortBy.value, descending.value, workers.value)))
     const sortedTeams = computed(() => filterBySearch(sortTeamsBy(sortBy.value, descending.value, teams.value)))
-    const sortedModels = computed(() => filterBySearch(sortModelsBy(sortBy.value, descending.value, useGeneratorStore().modelsData.filter(el => el.type === "ckpt"))));
+    const sortedModels = computed(() => {
+        var filteredList = useGeneratorStore().modelsData.filter(el => el.type === "ckpt");
+        if (settings.useAIEUHorde) {
+            filteredList = useGeneratorStore().modelsData;
+        }
+        var sortedList = sortModelsBy(sortBy.value, descending.value, filteredList);
+        return filterBySearch(sortedList);
+    });
     const sortOptions = computed<SortOptions[]>(() => {
         let options: SortOptions[] = ["Default", "Name", "Info", "Uptime","Speed", "Requests"];
         if (activeTab.value === "workers") options = [...options, "MPS"];
@@ -109,17 +117,16 @@ export const useWorkerStore = defineStore("workers", () => {
     let CurrentModelWorkers: WorkerDetailsStable[] = [];
 
     function getAllWorkersWithModel(modelName: string) {
-        if(workers.value.length === 0) 
-            updateWorkers();
         CurrentModelWorkers = [];
-        workers.value.forEach(element => {
-            element.models?.forEach(ml => {
-                if (ml == modelName) {
-                    CurrentModelWorkers.push(element);
-                    return;
-                }
+        if(workers.value.length > 0)
+            workers.value.forEach(element => {
+                element.models?.forEach(ml => {
+                    if (ml == modelName) {
+                        CurrentModelWorkers.push(element);
+                        return;
+                    }
+                });
             });
-        });
         return CurrentModelWorkers;
     }
     
@@ -134,16 +141,25 @@ export const useWorkerStore = defineStore("workers", () => {
      * Updates the current list of workers
      * */ 
     function updateWorkers() {
-        fetch(`${BASE_URL_STABLE}/api/v2/workers`).then(response => {
+        var fetchUri = `${BASE_URL_AI_STABLE}/api/v2/workers`;
+        if(settings.useAIEUHorde === 'Enabled') {
+            fetchUri = `${BASE_URL_EU_STABLE}/api/v2/workers`;
+        }    
+        fetch(fetchUri).then(response => {
             response.json().then(resJSON => {
                 if (!validateResponse(response, resJSON, 200, lang.GetText(`workfailedtoupdateworkers`))) return;
                 if (DEBUG_MODE) console.log("Updated workers!", resJSON)
                 workers.value = [];
                 (resJSON as WorkerDetailsStable[]).forEach(el => {
-                    if(el.type == "image") {
+                    if (settings.useAIEUHorde === 'Enabled') {
                         workers.value.push(el);
+                    } else {
+                        if(el.type == "image") {
+                            workers.value.push(el);
+                        }
                     }
                 });
+                if (DEBUG_MODE) console.log("Currently Active: ", workers)
                 getAllWorkersWithModel((useGeneratorStore().selectedModel || ""));
                 getMaximumPixel();
             });
@@ -151,7 +167,11 @@ export const useWorkerStore = defineStore("workers", () => {
     }
 
     async function updateTeams() {
-        const response = await fetch(`${BASE_URL_STABLE}/api/v2/teams`);
+        var fetchUri = `${BASE_URL_AI_STABLE}/api/v2/teams`;
+        if(settings.useAIEUHorde === 'Enabled') {
+            fetchUri = `${BASE_URL_EU_STABLE}/api/v2/teams`;
+        }    
+        const response = await fetch(fetchUri);
         const resJSON: TeamDetailsStable[] = await response.json();
         if (!validateResponse(response, resJSON, 200, lang.GetText(`workfailedtoupdateteams`))) return;
         if (DEBUG_MODE) console.log("Updated teams!", resJSON)

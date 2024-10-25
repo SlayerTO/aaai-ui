@@ -5,8 +5,10 @@ import { useWorkerStore } from "./workers";
 import { useUserStore } from "./user";
 import { POLL_DASHBOARD_INTERVAL, POLL_USERS_INTERVAL, DEBUG_MODE } from "@/constants";
 import { validateResponse } from "@/utils/validate";
-import { BASE_URL_STABLE } from "@/constants";
+import { BASE_URL_AI_STABLE, BASE_URL_EU_STABLE } from "@/constants";
 import { useLanguageStore } from '@/stores/i18n';
+import { useOptionsStore } from '@/stores/options';
+
 const formatter = Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 2});
 
 
@@ -28,6 +30,7 @@ export type AAAIVideoPerformance = {
 
 export const useDashboardStore = defineStore("dashboard", () => {
     const lang = useLanguageStore();
+    const settings = useOptionsStore();
     const user = ref<UserDetailsStable>({});
     const userWorkers = ref<WorkerDetailsStable[]>([]);
     const performance = ref<HordePerformanceStable>({});
@@ -44,7 +47,11 @@ export const useDashboardStore = defineStore("dashboard", () => {
     async function updateDashboard() {
         const userStore = useUserStore();
 
-        const response = await fetch(`${BASE_URL_STABLE}/api/v2/find_user`, {
+        var fetchUri = `${BASE_URL_AI_STABLE}/api/v2/find_user`;
+        if(settings.useAIEUHorde === 'Enabled') {
+            fetchUri = `${BASE_URL_EU_STABLE}/api/v2/find_user`;
+        }      
+        const response = await fetch(fetchUri, {
             headers: {
                 apikey: userStore.apiKey
             }
@@ -63,7 +70,11 @@ export const useDashboardStore = defineStore("dashboard", () => {
      * Finds the user's stale workers
      * */ 
     async function getStaleWorker(workerID: string) {
-        const response = await fetch(`${BASE_URL_STABLE}/api/v2/workers/${workerID}`);
+        var fetchUri = `${BASE_URL_AI_STABLE}/api/v2/workers/${workerID}`;
+        if(settings.useAIEUHorde === 'Enabled') {
+            fetchUri = `${BASE_URL_EU_STABLE}/api/v2/workers/${workerID}`;
+        }      
+        const response = await fetch(fetchUri);
         const resJSON = await response.json();
         if (!validateResponse(response, resJSON, 200, lang.GetText(`dashfailedtofindapi`))) return false;
         return resJSON;
@@ -89,7 +100,11 @@ export const useDashboardStore = defineStore("dashboard", () => {
     }
 
     async function updateUsers() {
-        const response = await fetch(`${BASE_URL_STABLE}/api/v2/users`);
+        var fetchUri = `${BASE_URL_AI_STABLE}/api/v2/users`;
+        if(settings.useAIEUHorde === 'Enabled') {
+            fetchUri = `${BASE_URL_EU_STABLE}/api/v2/users`;
+        }      
+        const response = await fetch(fetchUri);
         const resJSON = await response.json();
         if (!validateResponse(response, resJSON, 200, lang.GetText(`dashfailedtoupdate`))) return false;
         users.value = resJSON;
@@ -105,7 +120,11 @@ export const useDashboardStore = defineStore("dashboard", () => {
     }
 
     async function getHordePerformance() {
-        const response = await fetch(`${BASE_URL_STABLE}/api/v2/status/performance`);
+        var fetchUri = `${BASE_URL_AI_STABLE}/api/v2/status/performance`;
+        if(settings.useAIEUHorde === 'Enabled') {
+            fetchUri = `${BASE_URL_EU_STABLE}/api/v2/status/performance`;
+        }      
+        const response = await fetch(fetchUri);
         const resJSON = await response.json();
         if (!validateResponse(response, resJSON, 200, lang.GetText(`dashfailedtoget`))) return false;
         performance.value = resJSON;

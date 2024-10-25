@@ -3,11 +3,13 @@ import FormSelect from './FormSelect.vue';
 import { useOptionsStore } from '@/stores/options';
 import { useWorkerStore } from '@/stores/workers';
 import { useLanguageStore } from '@/stores/i18n';
+import { DEBUG_MODE } from "@/constants";
 const lang = useLanguageStore();
 const store = useOptionsStore();
 const workerStore = useWorkerStore();
 
 workerStore.updateWorkers();
+if (DEBUG_MODE) console.log("Attempting to update worker store from FormWorkerSelect...")
 
 </script>
 

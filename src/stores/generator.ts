@@ -3,7 +3,6 @@ import { defineStore } from "pinia";
 import type { ModelGenerationInputStable, GenerationStable, RequestAsync, GenerationInput, ActiveModel, RequestStatusCheck } from "@/types/stable_horde"
 import { useOutputStore, type ImageData } from "./outputs";
 import { useUIStore } from "./ui";
-import { useOptionsStore } from "./options";
 import { useUserStore } from "./user";
 import router from "@/router";
 import { useCanvasStore } from "./canvas";
@@ -13,9 +12,11 @@ import { MODELS_DB_URL, POLL_MODELS_INTERVAL, DEBUG_MODE, POLL_STYLES_INTERVAL, 
 import { convertToBase64 } from "@/utils/base64";
 import { validateResponse } from "@/utils/validate";
 import { ElNotification, type FormRules } from "element-plus";
-import { BASE_URL_STABLE } from "@/constants";
+import { BASE_URL_AI_STABLE, BASE_URL_EU_STABLE } from "@/constants";
 import { genrand_int32, MersenneTwister } from '@/utils/mersenneTwister';
 import { useLanguageStore } from '@/stores/i18n';
+import { useOptionsStore } from '@/stores/options';
+
 
 function getDefaultStore() {
     return <ModelGenerationInputStable>{
@@ -90,6 +91,7 @@ type IGroupedModel ={ label: string; options: {label: string; value: string;}[] 
 
 export const useGeneratorStore = defineStore("generator", () => {
     const lang = useLanguageStore();
+    const settings = useOptionsStore();
     const canvasStore = useCanvasStore();
     const validGeneratorTypes = ['Text2Img', 'Img2Img', 'Inpainting'];
     const generatorType = useLocalStorage<IHordeGeneratorType>("generationType", "Txt2Img");
@@ -725,7 +727,11 @@ export const useGeneratorStore = defineStore("generator", () => {
     async function fetchNewID(parameters: GenerationInput) {
         if (DEBUG_MODE) console.log("New Generation: ", parameters)
         const userStore = useUserStore();
-        const response: Response = await fetch(`${BASE_URL_STABLE}/api/v2/generate/async`, {
+        var fetchUri = `${BASE_URL_AI_STABLE}/api/v2/generate/async`;
+        if(settings.useAIEUHorde === 'Enabled') {
+            fetchUri = `${BASE_URL_EU_STABLE}/api/v2/generate/async`;
+        }      
+        const response: Response = await fetch(fetchUri, {
             method: "POST",
             headers: {
                 'Content-Type': 'application/json',
@@ -748,7 +754,8 @@ export const useGeneratorStore = defineStore("generator", () => {
         const finalParams: ImageData[] = await Promise.all(
             finalImages.map(async (image) => {
                 let { img } = image;
-                if (image.r2) {
+                if (DEBUG_MODE) console.log("processImages...", image)
+                if (!settings.useAIEUHorde && image.r2) {
                     const res = await fetch(`${img}`);
                     const blob = await res.blob();
                     const base64 = await convertToBase64(blob) as string;
@@ -842,7 +849,11 @@ export const useGeneratorStore = defineStore("generator", () => {
      * Gets information about the generating image(s). Returns false if an error occurs.
      * */ 
     async function checkImage(imageID: string, tries: number = 0): Promise<RequestStatusCheck | boolean> {
-        const response = await fetch(`${BASE_URL_STABLE}/api/v2/generate/check/`+imageID);
+        var fetchUri = `${BASE_URL_AI_STABLE}/api/v2/generate/check/`+imageID;
+        if(settings.useAIEUHorde === 'Enabled') {
+            fetchUri = `${BASE_URL_EU_STABLE}/api/v2/generate/check/`+imageID;
+        }      
+        const response = await fetch(fetchUri);
         
         if (response.status == 500) {
             tries++;
@@ -861,7 +872,11 @@ export const useGeneratorStore = defineStore("generator", () => {
      * */ 
     async function cancelImage(imageID: string) {
         queue.value = [];
-        const response = await fetch(`${BASE_URL_STABLE}/api/v2/generate/status/`+imageID, {
+        var fetchUri = `${BASE_URL_AI_STABLE}/api/v2/generate/status/`+imageID;
+        if(settings.useAIEUHorde === 'Enabled') {
+            fetchUri = `${BASE_URL_EU_STABLE}/api/v2/generate/status/`+imageID;
+        }      
+        const response = await fetch(fetchUri, {
             method: 'DELETE',
         });
         const resJSON = await response.json();
@@ -874,7 +889,11 @@ export const useGeneratorStore = defineStore("generator", () => {
      * Gets the final status of the generated image(s). Returns false if response is invalid.
      * */ 
     async function getImageStatus(imageID: string) {
-        const response = await fetch(`${BASE_URL_STABLE}/api/v2/generate/status/`+imageID);
+        var fetchUri = `${BASE_URL_AI_STABLE}/api/v2/generate/status/`+imageID;
+        if(settings.useAIEUHorde === 'Enabled') {
+            fetchUri = `${BASE_URL_EU_STABLE}/api/v2/generate/status/`+imageID;
+        }     
+        const response = await fetch(fetchUri);
         const resJSON = await response.json();
         if (!validateResponse(response, resJSON, 200, lang.GetText(`genfailedtocheckimagestatus`), onInvalidResponse)) return false;
         const generations: GenerationStable[] = resJSON.generations;
@@ -894,59 +913,68 @@ export const useGeneratorStore = defineStore("generator", () => {
      * Updates available models
      * */ 
     async function updateAvailableModels() {
-        const response = await fetch(`${BASE_URL_STABLE}/api/v2/status/models`);
+        var fetchUri = `${BASE_URL_AI_STABLE}/api/v2/status/models`;
+        if(settings.useAIEUHorde === 'Enabled') {
+            fetchUri = `${BASE_URL_EU_STABLE}/api/v2/status/models`;
+        }      
+        const response = await fetch(fetchUri);
         const resJSON: ActiveModel[] = await response.json();
         if (!validateResponse(response, resJSON, 200, lang.GetText(`genfailedtogetavailablemodels`))) return;
 
-        const dbResponse = await fetch(MODELS_DB_URL);
-        const dbJSON = await dbResponse.json();
-        const nameList = Object.keys(dbJSON);
+        if (DEBUG_MODE) console.log("updateAvailableModels", resJSON)
 
-        // Format model data
-        const newStuff: IModelData[] = nameList.map(name => {
-            const { description, style, nsfw, type, trigger, showcases } = dbJSON[name];
-            const {
-                queued = 0,
-                eta = Infinity,
-                count = 0,
-                performance = 0,
-            } = resJSON.find(el => el.name === name) || {};
-          
-            return {
-                name,
-                description,
-                style,
-                nsfw,
-                type,
-                trigger,
-                showcases,
-                queued,
-                eta,
-                count,
-                performance,
-            };
-        });
-        modelsData.value = newStuff;
-        
-        availableModelsGrouped.value = [];
-        modelsData.value.forEach((model) => {
-            if(
-                nsfw.value ||
-                !nsfw.value && model.nsfw == false
-                )
-            {
-                let restModel = resJSON.find(el => el.name == model.name);
-                if (restModel != null)
+        if(settings.useAIEUHorde === 'Enabled') {
+            resJSON.forEach((model) => {
+                availableModelsGrouped.value.push({ label: "Models", options: [{value: model.name as string, label: `${model.name} (${model.count})`}] })
+            });
+        } else {
+            const dbResponse = await fetch(MODELS_DB_URL);
+            const dbJSON = await dbResponse.json();
+            const nameList = Object.keys(dbJSON);
+            // Format model data
+            const newStuff: IModelData[] = nameList.map(name => {
+                const { description, style, nsfw, type, trigger, showcases } = dbJSON[name];
+                const {
+                    queued = 0,
+                    eta = Infinity,
+                    count = 0,
+                    performance = 0,
+                } = resJSON.find(el => el.name === name) || {};
+                return {
+                    name,
+                    description,
+                    style,
+                    nsfw,
+                    type,
+                    trigger,
+                    showcases,
+                    queued,
+                    eta,
+                    count,
+                    performance,
+                };
+            });
+            modelsData.value = newStuff;            
+            availableModelsGrouped.value = [];
+            modelsData.value.forEach((model) => {
+                if(
+                    nsfw.value ||
+                    !nsfw.value && model.nsfw == false
+                    )
                 {
-                    let modelStyle = availableModelsGrouped.value.find(el2 => el2.label == model.style);
-                    if(modelStyle != null)
-                        modelStyle.options.push({value: restModel.name as string, label: `${(model.nsfw == true?"[NSFW] ":"")}${restModel.name} (${restModel.count})`});
-                    else
-                    availableModelsGrouped.value.push({ label: model.style as string, options: [{value: restModel.name as string, label: `${(model.nsfw == true?"[NSFW] ":"")}${restModel.name} (${restModel.count})`}] })
+                    let restModel = resJSON.find(el => el.name == model.name);
+                    if (restModel != null)
+                    {
+                        let modelStyle = availableModelsGrouped.value.find(el2 => el2.label == model.style);
+                        if(modelStyle != null)
+                            modelStyle.options.push({value: restModel.name as string, label: `${(model.nsfw == true?"[NSFW] ":"")}${restModel.name} (${restModel.count})`});
+                        else
+                        availableModelsGrouped.value.push({ label: model.style as string, options: [{value: restModel.name as string, label: `${(model.nsfw == true?"[NSFW] ":"")}${restModel.name} (${restModel.count})`}] })
 
+                    }
                 }
-            }
-        });
+            });
+        }
 
         availableModelsGrouped.value.push({ label: 'Extra', options: [{value: lang.GetText(`genrandom`), label: lang.GetText(`genrandom`)}, {value: lang.GetText(`genallmodels`), label: lang.GetText(`genallmodels`)}] });
     }

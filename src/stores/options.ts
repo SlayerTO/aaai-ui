@@ -17,6 +17,7 @@ export const useOptionsStore = defineStore("options", () => {
     const useBeta = useLocalStorage<IToggle>("useBeta", "Disabled");
     const useWorkers = useLocalStorage<string[]>("usedWorkers",[]);
     const pictureDownloadType = useLocalStorage<IPictureType>("downloadType", "JPG");
+    const useAIEUHorde = useLocalStorage<IToggle>("useAIEUHorde", "Disabled");
 
     const getWokersToUse = computed<string[]>(() => {
         var allowedWorkers: string[] = [];
@@ -84,6 +85,7 @@ export const useOptionsStore = defineStore("options", () => {
         autoCarousel,
         zipMetaData,
         useBeta,
+        useAIEUHorde,
         useWorkers,
         shareWithLaion,
         pictureDownloadType,

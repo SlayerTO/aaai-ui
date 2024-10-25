@@ -6,11 +6,14 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import { useUserStore } from "./user";
 import { useUIStore } from "./ui";
-import { BASE_URL_STABLE } from "@/constants";
+import { BASE_URL_AI_STABLE, BASE_URL_EU_STABLE } from "@/constants";
 import { ElMessage } from 'element-plus';
 import { useLanguageStore } from '@/stores/i18n';
+import { useOptionsStore } from '@/stores/options';
+
 export const useRatingStore = defineStore("rating", () => {
     const lang = useLanguageStore();
+    const settings = useOptionsStore();
     const currentRatingInfo = ref<DatasetImagePopResponse>({});
     const pendingRatingInfo = ref<DatasetImagePopResponse>({});
     const imagesRated = useLocalStorage<number>("ratedImages", 0);
@@ -76,7 +79,11 @@ export const useRatingStore = defineStore("rating", () => {
 
     async function submitRatingHorde(currentRating: AestheticRating, jobId: string) {
         const userStore = useUserStore();
-        const response = await fetch(`${BASE_URL_STABLE}/api/v2/generate/rate/`+jobId, {
+        var fetchUri = `${BASE_URL_AI_STABLE}/api/v2/generate/rate/`;
+        if(settings.useAIEUHorde === 'Enabled') {
+            fetchUri = `${BASE_URL_EU_STABLE}/api/v2/generate/rate/`;
+        }      
+        const response = await fetch(fetchUri+jobId, {
             method: "POST",
             headers: {
                 'Content-Type': 'application/json',

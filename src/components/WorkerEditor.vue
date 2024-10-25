@@ -15,9 +15,12 @@ import type { WorkerDetailsStable } from "@/types/stable_horde";
 import { useWorkerStore } from "@/stores/workers";
 import { useUserStore } from "@/stores/user";
 import { validateResponse } from "@/utils/validate";
-import { BASE_URL_STABLE } from "@/constants";
+import { BASE_URL_AI_STABLE, BASE_URL_EU_STABLE, DEBUG_MODE } from "@/constants";
 import { useLanguageStore } from '@/stores/i18n';
 const lang = useLanguageStore();
+import { useOptionsStore } from '@/stores/options';
+
+const settings = useOptionsStore();
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const props = defineProps<{
@@ -28,7 +31,12 @@ const workerStore = useWorkerStore();
 const userStore = useUserStore();
 
 async function updateWorkerOptions() {
-    const response = await fetch(`${BASE_URL_STABLE}/api/v2/workers/${props.worker?.id}`, {
+    
+    var fetchUri = `${BASE_URL_AI_STABLE}/api/v2/workers/${props.worker?.id}`;
+    if(settings.useAIEUHorde === 'Enabled') {
+        fetchUri = `${BASE_URL_EU_STABLE}/api/v2/workers/${props.worker?.id}`;
+    }    
+    const response = await fetch(fetchUri, {
         method: "PUT",
         body: JSON.stringify(workerOptionsChange.value),
         headers: {
@@ -38,6 +46,7 @@ async function updateWorkerOptions() {
     });
     const resJSON = await response.json();
     if (response.status === 403) {
+        if (DEBUG_MODE) console.log("Attempting to update worker store from updateWorkerOptions Invalid JSON...")
         workerStore.updateWorkers()
         return resJSON;
     }
@@ -49,6 +58,7 @@ async function updateWorkerOptions() {
         return;
     }
     if (!validateResponse(response, resJSON, 200, lang.GetText(`editfailedtomodifyworker`) )) return false;
+    if (DEBUG_MODE) console.log("Attempting to update worker store from updateWorkerOptions Valid Response...")
     workerStore.updateWorkers()
     return resJSON;
 }
@@ -66,7 +76,11 @@ function deleteWorker() {
         }
     ).then(() => {
         deleteTimer.value = setTimeout(async () => {
-            const response = await fetch(`${BASE_URL_STABLE}/api/v2/workers/${props.worker?.id}`, {
+            var fetchUri = `${BASE_URL_AI_STABLE}/api/v2/workers/${props.worker?.id}`;
+            if(settings.useAIEUHorde === 'Enabled') {
+                fetchUri = `${BASE_URL_EU_STABLE}/api/v2/workers/${props.worker?.id}`;
+            }    
+            const response = await fetch(fetchUri, {
                 method: "DELETE",
                 headers: {
                     apikey: userStore.apiKey
@@ -74,6 +88,7 @@ function deleteWorker() {
             });
             const resJSON = await response.json();
             if (!validateResponse(response, resJSON, 200, lang.GetText(`editfailedtodeleteworker`))) return false;
+            if (DEBUG_MODE) console.log("Attempting to update worker store from deleteWorker Valid Response...")
             workerStore.updateWorkers();
             dialogOpen.value = false;
         }, 60 * 1000)

@@ -4,8 +4,10 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import { useUserStore } from "./user";
 import { useUIStore } from "./ui";
-import { BASE_URL_STABLE } from "@/constants";
+import { BASE_URL_AI_STABLE, BASE_URL_EU_STABLE } from "@/constants";
 import { useLanguageStore } from '@/stores/i18n';
+import { useOptionsStore } from '@/stores/options';
+
 function sleep(ms: number) {
     return new Promise(res=>setTimeout(res, ms));
 }
@@ -23,6 +25,7 @@ interface FormResult {
 }
 
 export const useInterrogationStore = defineStore("interrogate", () => {
+    const settings = useOptionsStore();
     const lang = useLanguageStore();
     const currentInterrogation = ref<InterrogationInfo>({});
     const interrogating = ref(false);
@@ -42,7 +45,11 @@ export const useInterrogationStore = defineStore("interrogate", () => {
         const forms = selectedForms.value;
         if (!source_image) return onError(lang.GetText(`intfailedtogetimage`));
         interrogating.value = true;
-        const response = await fetch(`${BASE_URL_STABLE}/api/v2/interrogate/async`, {
+        var fetchUri = `${BASE_URL_AI_STABLE}/api/v2/interrogate/async`;
+        if(settings.useAIEUHorde === 'Enabled') {
+            fetchUri = `${BASE_URL_EU_STABLE}/api/v2/interrogate/async`;
+        }    
+        const response = await fetch(fetchUri, {
             method: "POST",
             headers: {
                 'Content-Type': 'application/json',
@@ -77,7 +84,11 @@ export const useInterrogationStore = defineStore("interrogate", () => {
 
     async function getInterrogationStatus() {
         interrogating.value = true;
-        const response = await fetch(`${BASE_URL_STABLE}/api/v2/interrogate/status/${currentInterrogation.value.id}`, {
+        var fetchUri = `${BASE_URL_AI_STABLE}/api/v2/interrogate/status/${currentInterrogation.value.id}`;
+        if(settings.useAIEUHorde === 'Enabled') {
+            fetchUri = `${BASE_URL_EU_STABLE}/api/v2/interrogate/status/${currentInterrogation.value.id}`;
+        }    
+        const response = await fetch(fetchUri, {
             headers: {
                 'Content-Type': 'application/json',
                 "Client-Agent": "AAAIUI:1.0:Discord Sgt. Chaos#0812",

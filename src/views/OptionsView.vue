@@ -91,6 +91,8 @@ async function onTagsChange() {
         
                 <form-slider :label="lang.GetText(`llimagesperpage`)" prop="pageSize" v-model="store.pageSize" :min="10" :max="50" :step="5" :disabled="store.pageless === 'Enabled'" />
         
+                <form-radio  label="AIEU Horde" prop="useAIEUHorde" v-model="store.useAIEUHorde" :options="['Enabled', 'Disabled']" />
+
                 <form-radio  :label="lang.GetText(`llpageless`)" prop="pageless" v-model="store.pageless" :options="['Enabled', 'Disabled']" />
 
                 <form-radio  :label="lang.GetText(`llcarouselauto`)" prop="autoCarousel" v-model="store.autoCarousel" :options="['Enabled', 'Disabled']" />
