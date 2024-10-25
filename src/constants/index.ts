@@ -1,7 +1,7 @@
 import { ref } from 'vue';
 
 export const BASE_URL_AI_STABLE = "https://aihorde.net";
-export const BASE_URL_EU_STABLE = "http://libertas.zapto.org";
+export const BASE_URL_EU_STABLE = "https://libertas.zapto.org";
 export const MODELS_DB_URL = "https://raw.githubusercontent.com/db0/AI-Horde-image-model-reference/main/stable_diffusion.json";
 export const POLL_DASHBOARD_INTERVAL = 30; // seconds
 export const POLL_WORKERS_INTERVAL   = 60; // seconds
