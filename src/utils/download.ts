@@ -30,6 +30,13 @@ export async function downloadMultipleWebp(outputs: ImageData[]) {
         else if (optionStore.pictureDownloadType == "JPG")
         {
             zip.file(
+                fileName + ".jpg",
+                await convertBase64ToBlob(image, "image/jpeg"),
+            );
+        }
+        else if (optionStore.pictureDownloadType == "JPEG")
+        {
+            zip.file(
                 fileName + ".jpeg",
                 await convertBase64ToBlob(image, "image/jpeg"),
             );
@@ -74,6 +81,10 @@ export async function downloadImage(output: ImageData, fileName: string) {
         downloadLink.href = URL.createObjectURL(await convertBase64ToBlob(image, "image/png"));
     }
     else if (store.pictureDownloadType == "JPG") {          
+        newFileName += ".jpg";
+        downloadLink.href = URL.createObjectURL(await convertBase64ToBlob(image, "image/jpeg"));
+    }
+    else if (store.pictureDownloadType == "JPEG") {          
         newFileName += ".jpeg";
         downloadLink.href = URL.createObjectURL(await convertBase64ToBlob(image, "image/jpeg"));
     }

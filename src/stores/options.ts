@@ -5,7 +5,7 @@ import type { WorkerDetailsStable } from "@/types/stable_horde";
 
 
 type IToggle = "Enabled" | "Disabled";
-type IPictureType = "WEBP" | "PNG" | "JPG";
+type IPictureType = "WEBP" | "PNG" | "JPG" | "JPEG";
 
 export const useOptionsStore = defineStore("options", () => {
     const pageSize = useLocalStorage("pageSize", 25);
