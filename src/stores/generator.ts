@@ -547,7 +547,7 @@ export const useGeneratorStore = defineStore("generator", () => {
     
                 const status = await checkImage(queuedImage.jobId);
                 if (!status) return generationFailed();
-                 if ((status as RequestStatusCheck).faulted) return generationFailed(lang.GetText(`genfaulted`));
+                if ((status as RequestStatusCheck).faulted) return generationFailed(lang.GetText(`genfaulted`));
                 if ((status as RequestStatusCheck).is_possible === false) return generationFailed(lang.GetText(`gennotpossible`));
                 queuedImage.waitData = (status as RequestStatusCheck);
 
