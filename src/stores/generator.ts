@@ -923,9 +923,16 @@ export const useGeneratorStore = defineStore("generator", () => {
 
         if (DEBUG_MODE) console.log("updateAvailableModels", resJSON)
 
-        if(settings.useAIEUHorde === 'Enabled') {
+        if(settings.useAIEUHorde === 'Enabled') {   
+            availableModelsGrouped.value = [];
             resJSON.forEach((model) => {
-                availableModelsGrouped.value.push({ label: "Models", options: [{value: model.name as string, label: `${model.name} (${model.count})`}] })
+
+                let modelStyle = availableModelsGrouped.value.find(el2 => el2.label == "Models");
+                if(modelStyle != null)
+                    modelStyle.options.push({value: model.name as string, label: `${model.name} (${model.count})`});
+                else
+                    availableModelsGrouped.value.push({ label: "Models", options: [{value: model.name as string, label: `${model.name} (${model.count})`}] })
+
             });
         } else {
             const dbResponse = await fetch(MODELS_DB_URL);
