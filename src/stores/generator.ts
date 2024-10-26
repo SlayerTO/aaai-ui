@@ -755,7 +755,7 @@ export const useGeneratorStore = defineStore("generator", () => {
             finalImages.map(async (image) => {
                 let { img } = image;
                 if (DEBUG_MODE) console.log("processImages...", image)
-                if (!settings.useAIEUHorde && image.r2) {
+                if (!(settings.useAIEUHorde  === 'Enabled') && image.r2) {
                     const res = await fetch(`${img}`);
                     const blob = await res.blob();
                     const base64 = await convertToBase64(blob) as string;
