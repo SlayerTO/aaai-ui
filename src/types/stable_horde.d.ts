@@ -371,12 +371,33 @@ export interface SubmitInput {
   generation?: string;
 }
 
+export type UserDetailsAAStable = UserDetailsAA & {
+  contributions?: ContributionsDetailsStable;
+  pixel_shards_details?: UserKudosDetails;
+  records?: UserRecords;
+  usage?: UsageDetailsStable;
+}
+
 export type UserDetailsStable = UserDetails & {
   contributions?: ContributionsDetailsStable;
   kudos_details?: UserKudosDetails;
   records?: UserRecords;
   usage?: UsageDetailsStable;
 };
+export interface UserDetailsAA {
+  account_age?: number;
+  concurrency?: number;
+  flagged?: boolean;
+  id?: number;
+  pixel_shards?: number;
+  moderator?: boolean;
+  pseudonymous?: boolean;
+  trusted?: boolean;
+  username?: string;
+  worker_count?: number;
+  worker_ids?: string[];
+  worker_invited?: number;
+}
 
 export interface UserDetails {
   account_age?: number;

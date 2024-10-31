@@ -41,7 +41,8 @@ export const useLanguageStore = defineStore("i18n", () => {
 
         "ttnegativeprompt":"Was aus dem Bild ausgeschlossen werden soll. Funktioniert nicht? Versuchen Sie, die Vorgabe zu erhöhen.",
 
-        "engapikey":"API-Schlüssel",
+        "engapikeyDB":"AI Horde API-Schlüssel",
+        "engapikeyAA":"Artifical Arts API-Schlüssel",
         "engenterapikey":"Geben Sie hier Ihren API-Schlüssel ein",
 
         "lllargervalues":"Größere Werte",
@@ -361,9 +362,12 @@ export const useLanguageStore = defineStore("i18n", () => {
         "workfailedtoupdateworkers":"Aktualisierung der Arbeiter fehlgeschlagen",
         "workfailedtoupdateteams":"Aktualisierung der Teams fehlgeschlagen",
         //aboutview.vue
-        "llkudos":"Kudos",
-        "llrequested":"Angefordert (Img|Int|Txt)",
-        "llgenerated":"Erzeugt (Img|Int|Txt)",
+        "llkudosDB":"Kudos",
+        "llkudosAA":"Pixel Shards",
+        "llrequestedDB":"Angefordert (Img|Int|Txt)",
+        "llgeneratedDB":"Erzeugt (Img|Int|Txt)",
+        "llrequestedAA":"Angefordert (Img)",
+        "llgeneratedAA":"Erzeugt (Img)",
         "dashhordeperformance":"Leistungen der Horde",
         "DashboardHordeImages":"Es sind <strong>%queued_requests%</strong> anfragen in der Warteschlange (<strong>%queued_megapixelsteps%</strong>) MPS mit <strong>%worker_count%</strong> Arbeitern (<strong>%thread_count%</strong> Threads).",
         "DashboardHordeInterrogator":"Es sind <strong>%queued_forms%</strong> Abfragebefehl in der Warteschlange mit <strong>%interrogator_count%</strong> Abfragearbeitern (<strong>%interrogator_thread_count%</strong> Threads).",
@@ -461,7 +465,8 @@ export const useLanguageStore = defineStore("i18n", () => {
 
         "ttnegativeprompt":"What to exclude from the image. Not working? Try increasing the guidance.",
 
-        "engapikey":"API Key",
+        "engapikeyDB":"AI Horde API Key",
+        "engapikeyAA":"Artifical Arts API Key",
         "engenterapikey":"Enter your API key here",
 
         "lllargervalues":"Larger Values",
@@ -780,9 +785,12 @@ export const useLanguageStore = defineStore("i18n", () => {
         "workfailedtoupdateworkers":"Failed to update workers",
         "workfailedtoupdateteams":"Failed to update teams",
         //aboutview.vue
-        "llkudos":"Kudos",
-        "llrequested":"Requested (Img|Int|Txt)",
-        "llgenerated":"Generated (Img|Int|Txt)",
+        "llkudosDB":"Kudos",
+        "llkudosAA":"Pixel Shards",
+        "llrequestedDB":"Requested (Img|Int|Txt)",
+        "llgeneratedDB":"Generated (Img|Int|Txt)",
+        "llrequestedAA":"Requested (Img)",
+        "llgeneratedAA":"Generated (Img)",
         "dashhordeperformance":"Horde Performance",
         "DashboardHordeImages":"There are <strong>%queued_requests%</strong> queued requests (<strong>%queued_megapixelsteps%</strong>) MPS with <strong>%worker_count%</strong> workers (<strong>%thread_count%</strong> threads).",
         "DashboardHordeInterrogator":"There are <strong>%queued_forms%</strong> queued interrogation requests with <strong>%interrogator_count%</strong> interrogation workers (<strong>%interrogator_thread_count%</strong> threads).",
@@ -880,7 +888,8 @@ export const useLanguageStore = defineStore("i18n", () => {
 
         "ttnegativeprompt":"Mi ne szerepeljen a képen. Nem működik? Próbáld magasabbra venni az Irányítást.",
 
-        "engapikey":"API Kulcs",
+        "engapikeyDB":"AI Horde API Kulcs",
+        "engapikeyAA":"Artifical Arts API Kulcs",
         "engenterapikey":"Add meg az API kulcsodat itt",
 
         "lllargervalues":"Magasabb Értékek",
@@ -1200,9 +1209,12 @@ export const useLanguageStore = defineStore("i18n", () => {
          "workfailedtoupdateworkers":"Nem sikerült a munkásokat frissíteni",
          "workfailedtoupdateteams":"Nem sikerült a csapatokat frissíteni",
          //aboutview.vue
-         "llkudos":"Kudos",
-         "llrequested":"Kért (Kép|Kih|Szöv)",
-         "llgenerated":"Generált (Kép|Kih|Szöv)",
+         "llkudosDB":"Kudos",
+         "llkudosAA":"Pixel Shards",
+         "llrequestedDB":"Kért (Kép|Kih|Szöv)",
+         "llgeneratedDB":"Generált (Kép|Kih|Szöv)",
+         "llrequestedAA":"Kért (Kép)",
+         "llgeneratedAA":"Generált (Kép)",
          "dashhordeperformance":"Horda Teljesítmény",
          "DashboardHordeImages":"Jelenleg <strong>%queued_requests%</strong> sorban álló kérelem (<strong>%queued_megapixelsteps%</strong>) MPS és <strong>%worker_count%</strong> munkás (<strong>%thread_count%</strong> szálon).",
          "DashboardHordeInterrogator":"Jelenleg <strong>%queued_forms%</strong> sorban álló kihallgatási kérelem <strong>%interrogator_count%</strong> kihallgató munkással (<strong>%interrogator_thread_count%</strong> szálon).",

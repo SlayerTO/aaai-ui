@@ -1,6 +1,6 @@
-import type { UserDetailsStable, HordePerformanceStable, WorkerDetailsStable } from "@/types/stable_horde";
+import type { UserDetailsStable, UserDetailsAAStable, HordePerformanceStable, WorkerDetailsStable } from "@/types/stable_horde";
 import { defineStore } from "pinia";
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useWorkerStore } from "./workers";
 import { useUserStore } from "./user";
 import { POLL_DASHBOARD_INTERVAL, POLL_USERS_INTERVAL, DEBUG_MODE } from "@/constants";
@@ -11,36 +11,54 @@ import { useOptionsStore } from '@/stores/options';
 
 const formatter = Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 2});
 
-
-export type AAAIVideoPerformance = {
-    success?: boolean;
-    Queue?: number;
-    QueuedFrames?: number;
-    TotalGenerated?: number;
-    TotalFrames?: number;
-    TotalUsers?: number;
-    DayGenerated?: number;
-    DayFrames?: number;
-    DayUsers?: number;
-    HourGenerated?: number;
-    HourFrames?: number;
-    HourUsers?: number;
-    msg?: string;
-  };
-
 export const useDashboardStore = defineStore("dashboard", () => {
     const lang = useLanguageStore();
     const settings = useOptionsStore();
-    const user = ref<UserDetailsStable>({});
+    const userDB = ref<UserDetailsStable>({});
+    const userAA = ref<UserDetailsAAStable>({});
     const userWorkers = ref<WorkerDetailsStable[]>([]);
     const performance = ref<HordePerformanceStable>({});
-    const performanceVideo = ref<AAAIVideoPerformance>({});
-    const users = ref<UserDetailsStable[]>([]);
+    const usersDB = ref<UserDetailsStable[]>([]);
+    const usersAA = ref<UserDetailsAAStable[]>([]);
     const leaderboard = ref<{id: number; name: string; kudos: string; mps: number;}[]>([]);
     const leaderboardOrderProp = ref("kudos");
     const leaderboardOrder = ref("descending");
     const news = ref<{date_published: string; newspiece: string; importance: string;}[]>([]);
     
+    const user = computed({
+        get() {
+            if(settings.useAIEUHorde === 'Enabled') {
+                return userAA.value;
+            } else {
+                return userDB.value;
+            }
+        },
+        set(newValue) {
+            if(settings.useAIEUHorde === 'Enabled') {
+                userAA.value = newValue;
+            } else {
+                userDB.value = newValue;
+            }
+        }
+    })
+    
+    const users = computed({
+        get() {
+            if(settings.useAIEUHorde === 'Enabled') {
+                return usersAA.value;
+            } else {
+                return usersDB.value;
+            }
+        },
+        set(newValue) {
+            if(settings.useAIEUHorde === 'Enabled') {
+                usersAA.value = newValue;
+            } else {
+                usersDB.value = newValue;
+            }
+        }
+    })
+
     /**
      * Finds the user based on API key
      * */ 
@@ -58,13 +76,40 @@ export const useDashboardStore = defineStore("dashboard", () => {
         });
         const resJSON: UserDetailsStable = await response.json();
         //if (!validateResponse(response, resJSON, 200, "Failed to find user by API key")) return false;
-        user.value = resJSON;
+        if(settings.useAIEUHorde === 'Enabled') {
+            userAA.value = resJSON;
+        } else {
+            userDB.value = resJSON;
+        }
         getHordePerformance();
-        getAAAIVideoPerformance();
         
         if (userStore.apiKey === '0000000000' || userStore.apiKey === '' || response.status !== 200) return;
         getAllUserWorkers();
     }
+
+    const getCurrentCurrency = computed(() => {
+        if(settings.useAIEUHorde === 'Enabled') {
+            return userAA.value.pixel_shards?.toLocaleString();
+        } else {
+            return userDB.value.kudos?.toLocaleString();
+        }
+    })
+
+    const getRequestedImages = computed(() => {
+        if(settings.useAIEUHorde === 'Enabled') {
+            return userAA.value.usage?.requests?.toLocaleString();// + ' | ' + userAA.value.usage?.megapixelsteps?.toLocaleString();
+        } else {
+            return userDB.value.records?.request?.image?.toLocaleString() + ' | ' + userDB.value.records?.request?.interrogation?.toLocaleString() + ' | ' + userDB.value.records?.request?.text?.toLocaleString();
+        }
+    })
+
+    const getFullfilledImages = computed(() => {
+        if(settings.useAIEUHorde === 'Enabled') {
+            return userAA.value.contributions?.fulfillments?.toLocaleString();// + ' | ' + userAA.value.contributions?.megapixelsteps?.toLocaleString();
+        } else {
+            return userDB.value.records?.fulfillment?.image?.toLocaleString() + ' | ' + userDB.value.records?.fulfillment?.interrogation?.toLocaleString() + ' | ' + userDB.value.records?.fulfillment?.text?.toLocaleString();
+        }
+    })
 
     /**
      * Finds the user's stale workers
@@ -107,16 +152,12 @@ export const useDashboardStore = defineStore("dashboard", () => {
         const response = await fetch(fetchUri);
         const resJSON = await response.json();
         if (!validateResponse(response, resJSON, 200, lang.GetText(`dashfailedtoupdate`))) return false;
-        users.value = resJSON;
-        updateLeaderboard();
-    }
-
-    async function getAAAIVideoPerformance() {
-        const response = await fetch(`https://api.artificial-art.eu/video/stats`);
-        const resJSON = await response.json();
-        if (!validateResponse(response, resJSON, 200, lang.GetText(`dashfailedtogetaaai`))) return false;
-        performanceVideo.value = resJSON;
-
+        if(settings.useAIEUHorde === 'Enabled') {
+            usersAA.value = resJSON;
+        } else {
+            usersDB.value = resJSON;
+        }
+        //updateLeaderboard();
     }
 
     async function getHordePerformance() {
@@ -165,30 +206,6 @@ export const useDashboardStore = defineStore("dashboard", () => {
         }
     }
 
-    function performanceTable() {
-        const tableData = [
-          {
-            type: lang.GetText('ChaosPerformanceLastHour'),
-            videos: Intl.NumberFormat('en-US').format(performanceVideo.value.HourGenerated || 0),
-            frames: Intl.NumberFormat('en-US').format(performanceVideo.value.HourFrames || 0),
-            uesers: Intl.NumberFormat('en-US').format(performanceVideo.value.HourUsers || 0),
-          },
-          {
-            type: lang.GetText('ChaosPerformanceLastDay'),
-            videos: Intl.NumberFormat('en-US').format(performanceVideo.value.DayGenerated || 0),
-            frames: Intl.NumberFormat('en-US').format(performanceVideo.value.DayFrames || 0),
-            uesers: Intl.NumberFormat('en-US').format(performanceVideo.value.DayUsers || 0),
-          },
-          {
-            type: lang.GetText('ChaosPerformanceTotal'),
-            videos: Intl.NumberFormat('en-US').format(performanceVideo.value.TotalGenerated || 0),
-            frames: Intl.NumberFormat('en-US').format(performanceVideo.value.TotalFrames || 0),
-            uesers: Intl.NumberFormat('en-US').format(performanceVideo.value.TotalUsers || 0),
-          },
-        ];
-        return tableData;
-    }
-
     updateDashboard();
     updateUsers();
     setInterval(updateDashboard, POLL_DASHBOARD_INTERVAL * 1000);
@@ -199,19 +216,19 @@ export const useDashboardStore = defineStore("dashboard", () => {
         user,
         userWorkers,
         performance,
-        performanceVideo,
         users,
         leaderboard,
         leaderboardOrderProp,
         leaderboardOrder,
         news, 
+        getCurrentCurrency,
+        getRequestedImages,
+        getFullfilledImages,
         // Actions
-        performanceTable,
         updateDashboard,
         getAllUserWorkers,
         updateLeaderboard,
         updateUsers,
-        getHordePerformance,
-        getAAAIVideoPerformance
+        getHordePerformance
     };
 });

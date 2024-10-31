@@ -81,17 +81,24 @@ async function onTagsChange() {
     >
         <el-row justify="space-around">
             <el-column>
-                <el-form-item :label="lang.GetText(`engapikey`)" prop="apiKey">
-                    <el-input v-model="userStore.apiKey" type="password" :placeholder="lang.GetText(`engenterapikey`)" autocomplete="off" class="apikey" show-password />
+                <el-form-item v-if="store.useAIEUHorde === 'Disabled'" :label="lang.GetText(`engapikeyDB`)" prop="apiKeyDB">
+                    <el-input v-model="userStore.apikeyDB" type="password" :placeholder="lang.GetText(`engenterapikey`)" autocomplete="off" class="apiKeyDB" show-password />
                     <el-button class="anon" @click="userStore.setAnon()">Anon?</el-button>
-                    <div v-if="userStore.userId !== '0'"><small style="color: var(--el-text-color-regular);">User ID: <strong>{{userStore.userId}}</strong></small></div>
+                    <a href="https://aihorde.net/register" target="_blank"><el-button class="register">Register</el-button></a>
+                </el-form-item>
+                
+                <form-radio  label="Artifical Arts Horde" prop="useAIEUHorde" v-model="store.useAIEUHorde" :options="['Enabled', 'Disabled']" />
+                
+                <el-form-item v-if="store.useAIEUHorde === 'Enabled'" :label="lang.GetText(`engapikeyAA`)" prop="apiKeyAA">
+                    <el-input v-model="userStore.apiKeyAA" type="password" :placeholder="lang.GetText(`engenterapikey`)" autocomplete="off" class="apiKeyAA" show-password />
+                    <el-button class="anon" @click="userStore.setAnon()">Anon?</el-button>
+                    <a href="https://libertas.zapto.org/register" target="_blank"><el-button class="register">Register</el-button></a>
                 </el-form-item>
         
                 <form-worker-select />
         
                 <form-slider :label="lang.GetText(`llimagesperpage`)" prop="pageSize" v-model="store.pageSize" :min="10" :max="50" :step="5" :disabled="store.pageless === 'Enabled'" />
         
-                <form-radio  label="AIEU Horde" prop="useAIEUHorde" v-model="store.useAIEUHorde" :options="['Enabled', 'Disabled']" />
 
                 <form-radio  :label="lang.GetText(`llpageless`)" prop="pageless" v-model="store.pageless" :options="['Enabled', 'Disabled']" />
 

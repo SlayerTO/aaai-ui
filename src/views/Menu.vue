@@ -49,13 +49,13 @@ watch(
     :class="isMobile ? 'mobile-menu' : 'menu'"
     ref="menuRef"
     >
-    <el-menu-item index="/dashboard" class="center-vertical" v-if="!isMobile">
+    <el-menu-item class="remove-item-styling center-vertical" v-if="!isMobile">
         <template #title>
             <div v-if="optionStore.colorMode == 'light'" style="font-size: 20px;"><img alt="Artificial Art Logo" src="/assets/logo.png" style="max-height:35px;margin-bottom: 10px;"/></div>
             <div v-else style="font-size: 20px;"><img alt="Artificial Art Logo" src="/assets/logo_w.png" style="max-height:35px;margin-bottom: 10px;"/></div>
         </template>
     </el-menu-item>
-    <MainMenuItem :isMobile="isMobile" index="/dashboard" v-if="isMobile">
+    <MainMenuItem :isMobile="isMobile" v-if="isMobile">
         <template #icon><el-icon><home-filled /></el-icon></template>
         <template #title>{{lang.GetText(`menudashbard`)}}</template>
     </MainMenuItem>

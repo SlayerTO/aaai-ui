@@ -11,9 +11,6 @@ import {
     VideoCameraFilled
 } from '@element-plus/icons-vue';
 
-import FormTxt2Vid from '../components/FormTxt2Vid.vue';
-import FormImg2Vid from '../components/FormImg2Vid.vue';
-
 import GeneratorMenuItem from '../components/GeneratorMenuItem.vue';
 
 import { breakpointsTailwind, useBreakpoints } from '@vueuse/core';
@@ -42,16 +39,6 @@ handleUrlParams();
 
 <template>
     <Menu />
-    <el-menu
-        :default-active="store.generatorChaosType"
-        :collapse="true"
-        @select="onMenuChange"
-        :mode="isMobile ? 'horizontal' : 'vertical'"
-        :class="isMobile ? 'mobile-generator-types' : 'generator-types'"
-    >
-        <GeneratorMenuItem index="Txt2Vid"       :icon-one="Comment"             :icon-two="VideoCameraFilled" :isMobile="isMobile" />
-        <GeneratorMenuItem index="Img2Vid"       :icon-one="PictureFilled"       :icon-two="VideoCameraFilled" :isMobile="isMobile" />
-    </el-menu>
     <div class="form">
 
         <FormTxt2Vid v-if="store.generatorChaosType === 'Txt2Vid'" />

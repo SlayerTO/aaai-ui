@@ -23,6 +23,7 @@ import { useUserStore } from '@/stores/user';
 import BaseLink from '@/components/BaseLink.vue';
 import { useLanguageStore } from '@/stores/i18n';
 import Menu from '../views/Menu.vue';
+import { useOptionsStore } from '@/stores/options';
 const lang = useLanguageStore();
 const breakpoints = useBreakpoints(breakpointsTailwind);
 
@@ -42,7 +43,7 @@ const sortChange = function(column: any) {
     dashStore.updateLeaderboard();
 }
 
-const signedIn = computed(() => userStore.apiKey != '0000000000' && userStore.apiKey != '' && userStore.userId != "0");
+const signedIn = computed(() => userStore.apiKey != '0000000000' && userStore.apiKey != '');
 </script>
 <template>
     <Menu />
@@ -50,11 +51,16 @@ const signedIn = computed(() => userStore.apiKey != '0000000000' && userStore.ap
         <div>
             <div v-if="signedIn">
                 <div class="dashboard-title">{{lang.GetText(`dashboardtext1`)}} {{dashStore.user.username}}</div>
-                <el-row :gutter="breakLabels ? 0 : 20" justify="center" style="width: 100%; margin-bottom: 2rem;">
-                    <el-col :span="spanLabels" class="label"><data-label style="width: 100%" :icon="Money"   :label="lang.GetText(`llkudos`)"           :content="dashStore.user.kudos?.toLocaleString()"                       color="var(--el-color-success)" /></el-col>
-                    <el-col :span="spanLabels" class="label"><data-label style="width: 100%" :icon="Picture" :label="lang.GetText(`llrequested`)"       :content="dashStore.user.records?.request?.image?.toLocaleString() + ' | ' + dashStore.user.records?.request?.interrogation?.toLocaleString() + ' | ' + dashStore.user.records?.request?.text?.toLocaleString()" color="var(--el-color-danger)"  /></el-col>
-                    <el-col :span="spanLabels" class="label"><data-label style="width: 100%" :icon="Aim"     :label="lang.GetText(`llgenerated`)"       :content="dashStore.user.records?.fulfillment?.image?.toLocaleString() + ' | ' + dashStore.user.records?.fulfillment?.interrogation?.toLocaleString() + ' | ' + dashStore.user.records?.fulfillment?.text?.toLocaleString()" color="var(--el-color-primary)" /></el-col>
-                </el-row>                
+                <el-row v-if="useOptionsStore().useAIEUHorde === 'Enabled'" :gutter="breakLabels ? 0 : 20" justify="center" style="width: 100%; margin-bottom: 2rem;">
+                    <el-col :span="spanLabels" class="label"><data-label style="width: 100%" :icon="Money"   :label="lang.GetText(`llkudosAA`)"           :content="dashStore.getCurrentCurrency"                       color="var(--el-color-success)" /></el-col>
+                    <el-col :span="spanLabels" class="label"><data-label style="width: 100%" :icon="Picture" :label="lang.GetText(`llrequestedAA`)"       :content="dashStore.getRequestedImages" color="var(--el-color-danger)"  /></el-col>
+                    <el-col :span="spanLabels" class="label"><data-label style="width: 100%" :icon="Aim"     :label="lang.GetText(`llgeneratedAA`)"       :content="dashStore.getFullfilledImages" color="var(--el-color-primary)" /></el-col>
+                </el-row>         
+                <el-row v-else :gutter="breakLabels ? 0 : 20" justify="center" style="width: 100%; margin-bottom: 2rem;">
+                    <el-col :span="spanLabels" class="label"><data-label style="width: 100%" :icon="Money"   :label="lang.GetText(`llkudosDB`)"           :content="dashStore.getCurrentCurrency"                       color="var(--el-color-success)" /></el-col>
+                    <el-col :span="spanLabels" class="label"><data-label style="width: 100%" :icon="Picture" :label="lang.GetText(`llrequestedDB`)"       :content="dashStore.getRequestedImages" color="var(--el-color-danger)"  /></el-col>
+                    <el-col :span="spanLabels" class="label"><data-label style="width: 100%" :icon="Aim"     :label="lang.GetText(`llgeneratedDB`)"       :content="dashStore.getFullfilledImages" color="var(--el-color-primary)" /></el-col>
+                </el-row>          
             </div>
             <div v-else>
                 <div class="api-key-required"><el-icon :size="30" style="margin-right: 10px"><Lock /></el-icon>{{lang.GetText(`dashrequiresapikey`)}}</div>
@@ -63,24 +69,12 @@ const signedIn = computed(() => userStore.apiKey != '0000000000' && userStore.ap
                 <el-col :span="spanAmount" class="label">
                     <el-card style="margin-bottom: 10px;">
                         <template #header>
-                            <strong>{{lang.GetText(`dashhordeperformance`)}}</strong>
+                            <strong v-if="useOptionsStore().useAIEUHorde === 'Enabled'">Artifical Art {{lang.GetText(`dashhordeperformance`)}}</strong>
+                            <strong v-else>{{lang.GetText(`dashhordeperformance`)}}</strong>
                         </template>
                         <div v-html="lang.GetText(`DashboardHordeImages`, {'%queued_requests%': (dashStore.performance.queued_requests || 0).toString(), '%queued_megapixelsteps%': (dashStore.performance.queued_megapixelsteps || 0).toString(), '%worker_count%': (dashStore.performance.worker_count || 0).toString(), '%thread_count%': (dashStore.performance.thread_count || 0).toString()})"></div>
                         <div v-html="lang.GetText(`DashboardHordeInterrogator`, {'%queued_forms%': (dashStore.performance.queued_forms || 0).toString(), '%interrogator_count%': (dashStore.performance.interrogator_count || 0).toString(), '%interrogator_thread_count%': (dashStore.performance.interrogator_thread_count || 0).toString()})"></div>
                         <div v-html="lang.GetText(`DashboardHordeInThePast`, {'%past_minute_megapixelsteps%': dashStore.performance.past_minute_megapixelsteps})"></div>
-                    </el-card>
-                    <el-card style="margin-bottom: 10px;">
-                        <template #header>
-                            <strong> {{lang.GetText(`dashaaaivideoperformance`)}}</strong>
-                        </template>
-                        <div v-html="lang.GetText(`DashboardChaosImagesPerformance`, {'%Queue%': (dashStore.performanceVideo.Queue || 0).toString(), '%QueuedFrames%': (dashStore.performanceVideo.QueuedFrames || 0).toString()})"></div>
-                        <br/>
-                        <el-table :data="dashStore.performanceTable()" stripe style="width: 100%">
-                            <el-table-column prop="type"   label="" />
-                            <el-table-column prop="videos" :label="lang.GetText(`llvideos`)" />
-                            <el-table-column prop="frames" :label="lang.GetText(`llframes`)" />
-                            <el-table-column prop="uesers" :label="lang.GetText(`llusers`)" />
-                        </el-table>
                     </el-card>
                 </el-col>
                 <el-col :span="spanAmount" class="label">
@@ -109,12 +103,9 @@ const signedIn = computed(() => userStore.apiKey != '0000000000' && userStore.ap
         {{lang.GetText(`abouttext2`)}} <BaseLink href="https://discord.gg/ugEqPP5wMT">Discord!</BaseLink><br><br>
         {{lang.GetText(`abouttext3`)}} <BaseLink :router="false" href="https://ko-fi.com/artificialart">Ko-Fi!</BaseLink>
         {{lang.GetText(`abouttext3b`)}}<br><br>
-        <hr>
-        {{lang.GetText(`abouttext4`)}} <BaseLink :router="false" href="https://aihorde.net/register">https://aihorde.net/register</BaseLink><br>
-        <hr><br>
+        <hr><br/>
         {{lang.GetText(`abouttext5`)}} <BaseLink :router="false" href="https://icanhazdadjoke.com/">icanhazdadjoke.com</BaseLink><br><br>
-        {{lang.GetText(`abouttext6`)}} <BaseLink :router="false" href="https://aqualxx.github.io/stable-ui/">aqualxx#5004</BaseLink><br><br>
-        {{lang.GetText(`abouttext7`)}} <BaseLink :router="false" href="https://aihorde.net/">horde network</BaseLink> (<BaseLink :router="false" href="https://discord.gg/3DxrhksKzn">Discord</BaseLink>)<br>
+        {{lang.GetText(`abouttext6`)}} <BaseLink :router="false" href="https://aqualxx.github.io/stable-ui/">aqualxx#5004</BaseLink><br><br><br/><br/>
     </div>
   </div>
 </template>
