@@ -13,18 +13,22 @@ import FormControlSelect from '../components/FormControlSelect.vue';
 import { useGeneratorStore } from '@/stores/generator';
 import { useCanvasStore } from '@/stores/canvas';
 import { Check, Close } from '@element-plus/icons-vue';
+import { useOptionsStore } from '@/stores/options';
+
 
 const store = useGeneratorStore();
 const lang = useLanguageStore();
 const canvasStore = useCanvasStore();
 
-const samplerListLite = ["k_lms", "k_heun", "k_euler", "k_euler_a", "k_dpm_2", "k_dpm_2_a"]
-const dpmSamplers = ['k_dpm_fast', 'k_dpm_adaptive', 'k_dpmpp_2m', 'k_dpmpp_2s_a', 'k_dpmpp_sde']
+const samplerListDBH = ["k_lms", "k_heun", "k_euler", "k_euler_a", "k_dpm_2", "k_dpm_2_a", "k_dpm_fast", "k_dpm_adaptive", "k_dpmpp_2s_a", "k_dpmpp_2m", "k_dpmpp_sde", "ddim"];
+const samplerListAAH = ["Euler", "Euler a", "Heun", "LMS", "DDIM", "DDIM CFG++", "PLMS", "UniPC", "LCM", "Restart", "DPM fast", "DPM adaptive", "DPM2", "DPM2 a", "DPM++ 2M", "DPM++ SDE", "DPM++ 2M SDE", "DPM++ 2M SDE Heun", "DPM++ 2S a", "DPM++ 3M SDE"];
 
 const availableSamplers = computed(() => {
     if (store.selectedModel === "stable_diffusion_2.0") return updateCurrentSampler(["dpmsolver"])
-    if (store.generatorType === 'Txt2Img') return updateCurrentSampler([...samplerListLite, ...dpmSamplers]);
-    return updateCurrentSampler(samplerListLite);
+    if (useOptionsStore().useAIEUHorde === 'Enabled')
+        return updateCurrentSampler(samplerListAAH);
+    else
+        return updateCurrentSampler(samplerListDBH);
 })
 
 function updateCurrentSampler(newSamplers: string[]) {
